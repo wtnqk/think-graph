@@ -17,6 +17,7 @@ packages/
 - DaisyUI + Tailwind CSS
 - Iconify (アイコンライブラリ)
 - SvelteFlow (グラフエディタ)
+- Vitest (テストフレームワーク)
 - ESLint + Prettier (リンター・フォーマッター)
 - Vite
 - TypeScript
@@ -24,10 +25,15 @@ packages/
 ### Core (packages/core)
 - Hono (Webフレームワーク)
 - Cloudflare Workers (ランタイム)
-- Bearer Token認証
+- Cloudflare D1 (SQLiteデータベース)
+- Kysely (クエリビルダー)
+- Atlas (スキーママイグレーション)
+- Google OAuth + JWT認証
+- ArkType (バリデーション + ブランド型)
+- ULID (ID生成)
+- Vitest + @cloudflare/vitest-pool-workers (テスト)
 - ESLint + Prettier (リンター・フォーマッター)
-- ArkType (バリデーション)
-- Vite
+- TypeScript
 
 ### 開発ツール
 - Turbo (モノレポオーケストレーション)
@@ -51,6 +57,20 @@ cd packages/ui && bun run dev    # フロントエンド
 cd packages/core && bun run dev  # バックエンドAPI
 ```
 
+## データベース
+
+### マイグレーション (Atlas)
+
+```bash
+cd packages/core
+
+# スキーマ変更を検出してマイグレーションファイル生成
+atlas migrate diff <name> --env local
+
+# マイグレーション適用
+atlas migrate apply --env local
+```
+
 ## コード品質
 
 ```bash
@@ -72,6 +92,7 @@ bun run test
 
 # 個別テスト
 cd packages/ui && bun run test    # UIテスト
+cd packages/core && bun run test  # Coreテスト
 ```
 
 ## ビルド・デプロイ
