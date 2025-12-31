@@ -16,6 +16,7 @@ build/
 .env
 .env.local
 .env.*.local
+.dev.vars
 
 # Logs
 logs/
@@ -42,3 +43,7 @@ coverage/
 tmp/
 .tmp/
 .cache/
+
+# Local database
+*.local.db
+
