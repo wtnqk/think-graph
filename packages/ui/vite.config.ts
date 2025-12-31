@@ -6,6 +6,9 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
+	server: {
+		port: 5173,
+	},
 
 	test: {
 		expect: { requireAssertions: true },
