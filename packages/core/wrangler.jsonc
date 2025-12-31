@@ -9,5 +9,9 @@
 			"database_name": "think-graph-db",
 			"database_id": "local"
 		}
-	]
+	],
+	// テスト用環境変数
+	"vars": {
+		"JWT_SECRET": "test-jwt-secret-key-for-testing-only"
+	}
 }

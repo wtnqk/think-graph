@@ -16,6 +16,7 @@
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"test:unit": "vitest",
+		"test:run": "vitest run",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
 		"types": "wrangler types"

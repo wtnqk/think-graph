@@ -11,6 +11,7 @@
 		"build": "turbo build",
 		"check": "turbo check",
 		"test": "turbo test",
+		"test:run": "turbo test:run",
 		"test:unit": "turbo test:unit",
 		"lint": "turbo lint",
 		"lint:fix": "turbo lint:fix",

@@ -1,26 +1,25 @@
 import { type } from "arktype";
 import { Hono } from "hono";
-import { ulid } from "ulid";
-import { createDb } from "../lib/db";
-import { authMiddleware } from "../middleware/auth";
+import { createDb } from "../lib/db.js";
+import { authMiddleware } from "../middleware/auth.js";
+import { EdgeService, EdgeNotFoundError, EdgeCreationError } from "../services/edge.js";
+import type { CreateEdgeInput } from "../services/edge.js";
+import type { NodeId, EdgeId } from "../domain/ids.js";
+import type { JwtPayload } from "../domain/user.js";
 
 type Bindings = {
-	DB: D1Database;
-	JWT_SECRET: string;
+  DB: D1Database;
+  JWT_SECRET: string;
 };
 
 type Variables = {
-	user: {
-		sub: string;
-		email: string;
-		name: string;
-	};
+  user: JwtPayload;
 };
 
 // Validation schemas
 const createEdgeSchema = type({
-	source_id: "string",
-	target_id: "string",
+  source_id: "string",
+  target_id: "string",
 });
 
 const edges = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -29,89 +28,71 @@ edges.use("/*", authMiddleware);
 
 // List edges (optionally filter by source or target)
 edges.get("/", async (c) => {
-	const db = createDb(c.env.DB);
-	const sourceId = c.req.query("source_id");
-	const targetId = c.req.query("target_id");
+  const db = createDb(c.env.DB);
+  const edgeService = new EdgeService(db);
+  const sourceId = c.req.query("source_id") as NodeId | undefined;
+  const targetId = c.req.query("target_id") as NodeId | undefined;
 
-	let query = db.selectFrom("edges").selectAll();
+  try {
+    const filters = {
+      ...(sourceId && { sourceId }),
+      ...(targetId && { targetId }),
+    };
 
-	if (sourceId) {
-		query = query.where("source_id", "=", sourceId);
-	}
-	if (targetId) {
-		query = query.where("target_id", "=", targetId);
-	}
-
-	const edgesList = await query.execute();
-	return c.json(edgesList);
+    const edgesList = await edgeService.getEdges(filters);
+    return c.json(edgesList);
+  } catch (error) {
+    console.error("Failed to get edges:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
 });
 
 // Create an edge
 edges.post("/", async (c) => {
-	const db = createDb(c.env.DB);
-	const body = await c.req.json();
+  const db = createDb(c.env.DB);
+  const edgeService = new EdgeService(db);
 
-	const parsed = createEdgeSchema(body);
-	if (parsed instanceof type.errors) {
-		return c.json({ error: parsed.summary }, 400);
-	}
+  try {
+    const body = await c.req.json();
 
-	// Verify both nodes exist
-	const sourceNode = await db
-		.selectFrom("nodes")
-		.select("id")
-		.where("id", "=", parsed.source_id)
-		.executeTakeFirst();
+    // ArkTypeでバリデーション
+    const parsed = createEdgeSchema(body);
+    if (parsed instanceof type.errors) {
+      return c.json({ error: parsed.summary }, 400);
+    }
 
-	const targetNode = await db
-		.selectFrom("nodes")
-		.select("id")
-		.where("id", "=", parsed.target_id)
-		.executeTakeFirst();
+    const createInput: CreateEdgeInput = {
+      source_id: parsed.source_id as NodeId,
+      target_id: parsed.target_id as NodeId,
+    };
 
-	if (!sourceNode || !targetNode) {
-		return c.json({ error: "Source or target node not found" }, 404);
-	}
-
-	const id = ulid();
-
-	await db
-		.insertInto("edges")
-		.values({
-			id,
-			source_id: parsed.source_id,
-			target_id: parsed.target_id,
-			created_at: new Date().toISOString(),
-		})
-		.execute();
-
-	const edge = await db
-		.selectFrom("edges")
-		.selectAll()
-		.where("id", "=", id)
-		.executeTakeFirst();
-
-	return c.json(edge, 201);
+    const edge = await edgeService.createEdge(createInput);
+    return c.json(edge, 201);
+  } catch (error) {
+    if (error instanceof EdgeCreationError) {
+      return c.json({ error: "Source or target node not found" }, 404);
+    }
+    console.error("Failed to create edge:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
 });
 
 // Delete an edge
 edges.delete("/:id", async (c) => {
-	const db = createDb(c.env.DB);
-	const id = c.req.param("id");
+  const db = createDb(c.env.DB);
+  const edgeService = new EdgeService(db);
+  const id = c.req.param("id") as EdgeId;
 
-	const edge = await db
-		.selectFrom("edges")
-		.selectAll()
-		.where("id", "=", id)
-		.executeTakeFirst();
-
-	if (!edge) {
-		return c.json({ error: "Edge not found" }, 404);
-	}
-
-	await db.deleteFrom("edges").where("id", "=", id).execute();
-
-	return c.json({ ok: true });
+  try {
+    await edgeService.deleteEdge(id);
+    return c.json({ ok: true });
+  } catch (error) {
+    if (error instanceof EdgeNotFoundError) {
+      return c.json({ error: "Edge not found" }, 404);
+    }
+    console.error("Failed to delete edge:", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
 });
 
 export { edges };
