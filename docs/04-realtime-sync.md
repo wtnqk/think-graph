@@ -104,13 +104,13 @@ sequenceDiagram
     participant DB as D1
 
     Note over C: ノードをフォーカス
-    C->>API: GET /nodes/:id/likes
+    C->>API: GET /api/nodes/:id/likes
     API->>DB: SELECT * FROM node_likes
     DB-->>API: likes data
     API-->>C: { likes: [...], count: N }
 
     Note over C: Like操作
-    C->>API: POST /nodes/:id/likes
+    C->>API: POST /api/nodes/:id/like
     API->>DB: INSERT INTO node_likes
     API-->>C: OK
     API-->>C: WebSocket通知 (broadcast)
