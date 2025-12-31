@@ -14,15 +14,24 @@ packages/
 
 ### UI (packages/ui)
 - SvelteKit
-- Tailwind CSS
+- DaisyUI + Tailwind CSS
+- Iconify (アイコンライブラリ)
+- SvelteFlow (グラフエディタ)
+- ESLint + Prettier (リンター・フォーマッター)
 - Vite
 - TypeScript
-- テスト: Vitest + Playwright
 
 ### Core (packages/core)
-- Hono
-- Cloudflare Workers
+- Hono (Webフレームワーク)
+- Cloudflare Workers (ランタイム)
+- Bearer Token認証
+- ESLint + Prettier (リンター・フォーマッター)
+- ArkType (バリデーション)
 - Vite
+
+### 開発ツール
+- Turbo (モノレポオーケストレーション)
+- Bun (パッケージマネージャー)
 
 ## セットアップ
 
@@ -34,18 +43,35 @@ bun install
 ## 開発
 
 ```bash
-# UIの開発サーバー起動
-cd packages/ui && bun run dev
+# 全packageの開発サーバー起動 (推奨)
+bun run dev
 
-# Coreの開発サーバー起動
-cd packages/core && bun run dev
+# または個別起動
+cd packages/ui && bun run dev    # フロントエンド
+cd packages/core && bun run dev  # バックエンドAPI
+```
+
+## コード品質
+
+```bash
+# 全packageのリント実行
+bun run lint
+
+# リント問題の自動修正
+bun run lint:fix
+
+# コードフォーマット
+bun run format
 ```
 
 ## テスト
 
 ```bash
-# UIのテスト実行
-cd packages/ui && bun run test
+# 全packageのテスト実行
+bun run test
+
+# 個別テスト
+cd packages/ui && bun run test    # UIテスト
 ```
 
 ## ビルド・デプロイ
