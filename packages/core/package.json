@@ -6,10 +6,19 @@
 		"build": "vite build",
 		"preview": "$npm_execpath run build && vite preview",
 		"deploy": "$npm_execpath run build && wrangler deploy",
-		"cf-typegen": "wrangler types --env-interface CloudflareBindings"
+		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
+		"db:migrate": "atlas migrate diff --env local",
+		"db:apply": "atlas migrate apply --env local",
+		"db:status": "atlas migrate status --env local"
 	},
 	"dependencies": {
-		"hono": "^4.11.3"
+		"arktype": "^2.1.29",
+		"hono": "^4.11.3",
+		"hono-openapi": "^1.1.2",
+		"hono-rate-limiter": "^0.5.3",
+		"ksuid": "^3.0.0",
+		"kysely": "^0.28.9",
+		"kysely-d1": "^0.4.0"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.2.3",

@@ -2,5 +2,12 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "core",
 	"compatibility_date": "2025-08-03",
-	"main": "./src/index.tsx"
+	"main": "./src/index.tsx",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "think-graph-db",
+			"database_id": "local"
+		}
+	]
 }
