@@ -126,22 +126,40 @@ auth.get("/google/callback", async (c) => {
 		c.env.JWT_SECRET
 	);
 
-	setCookie(c, "token", token, {
-		httpOnly: true,
-		secure: true,
-		sameSite: "Lax",
-		maxAge: 60 * 60 * 24 * 7, // 7 days
-	});
-
 	const redirectTo = getCookie(c, "auth_redirect") || "/";
 	deleteCookie(c, "auth_redirect");
 
-	return c.redirect(redirectTo);
+	// Return token in URL for client to handle
+	const baseUrl = new URL(c.req.url).origin;
+	return c.redirect(`${baseUrl}/auth/success?token=${token}&redirect=${encodeURIComponent(redirectTo)}`);
 });
 
 auth.post("/logout", (c) => {
-	deleteCookie(c, "token");
+	// Client should remove token from storage
 	return c.json({ ok: true });
+});
+
+// Add endpoint to verify token and get user info
+auth.get("/me", async (c) => {
+	const authHeader = c.req.header("Authorization");
+
+	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
+
+	const token = authHeader.substring(7);
+
+	try {
+		const { verify } = await import("hono/jwt");
+		const payload = await verify(token, c.env.JWT_SECRET);
+		return c.json({
+			id: payload.sub,
+			email: payload.email,
+			name: payload.name,
+		});
+	} catch {
+		return c.json({ error: "Invalid token" }, 401);
+	}
 });
 
 export { auth };
