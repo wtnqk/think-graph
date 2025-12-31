@@ -4,6 +4,7 @@ import { auth } from "./routes/auth";
 import { api } from "./routes/api";
 import { nodes } from "./routes/nodes";
 import { edges } from "./routes/edges";
+import { authMiddleware } from "./middleware/auth";
 
 type Bindings = {
 	DB: D1Database;
@@ -17,12 +18,48 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.use(renderer);
 
 app.route("/auth", auth);
-app.route("/api", api);
-app.route("/api/nodes", nodes);
-app.route("/api/edges", edges);
+
+const apiRouter = new Hono<{ Bindings: Bindings }>()
+	.use("*", authMiddleware)
+	.route("/", api)
+	.route("/nodes", nodes)
+	.route("/edges", edges);
+
+app.route("/api", apiRouter);
 
 app.get("/", (c) => {
 	return c.render(<h1>Hello!</h1>);
+});
+
+// Auth success page to handle token
+app.get("/auth/success", (c) => {
+	return c.html(`
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<title>Authentication Success</title>
+		</head>
+		<body>
+			<h1>Authentication Successful</h1>
+			<p>Redirecting...</p>
+			<script>
+				const params = new URLSearchParams(window.location.search);
+				const token = params.get('token');
+				const redirect = params.get('redirect') || '/';
+
+				if (token) {
+					// Store token in localStorage
+					localStorage.setItem('auth_token', token);
+
+					// Redirect to intended page
+					window.location.href = redirect;
+				} else {
+					console.error('No token received');
+				}
+			</script>
+		</body>
+		</html>
+	`);
 });
 
 export default app;
