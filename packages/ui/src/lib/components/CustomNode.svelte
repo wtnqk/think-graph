@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { Handle, Position } from "@xyflow/svelte";
 	import { ApiClient } from "$lib/api";
 	import { Auth } from "$lib/auth";
-	import { Handle, Position } from "@xyflow/svelte";
 
 	import type { NodeData } from "$lib/types";
 
@@ -98,7 +98,7 @@
 </script>
 
 <div
-	class="card card-compact bg-base-100 border-2 {config.card} {config.bg} shadow-md min-w-[200px] hover:shadow-lg transition-all duration-200"
+	class="card card-compact bg-base-100 border-2 {config.card} {config.bg} shadow-md min-w-50 hover:shadow-lg transition-all duration-200"
 >
 	<Handle type="target" position={Position.Top} />
 
