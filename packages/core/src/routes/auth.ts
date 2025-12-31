@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
 import { createDb } from "../lib/db";
+import { ID, type UserId, type GoogleId } from "../domain/ids.js";
+import { createEmail, createUserName, type Email, type UserName } from "../domain/user.js";
 
 type Bindings = {
 	DB: D1Database;
@@ -79,12 +81,17 @@ auth.get("/google/callback", async (c) => {
 		name: string;
 	};
 
+	// Convert to branded types
+	const googleId = ID.GoogleId(googleUser.id);
+	const email = createEmail(googleUser.email);
+	const userName = createUserName(googleUser.name);
+
 	// Upsert user
 	const db = createDb(c.env.DB);
 	let user = await db
 		.selectFrom("users")
 		.selectAll()
-		.where("google_id", "=", googleUser.id)
+		.where("google_id", "=", googleId)
 		.executeTakeFirst();
 
 	if (user) {
@@ -92,33 +99,34 @@ auth.get("/google/callback", async (c) => {
 		await db
 			.updateTable("users")
 			.set({
-				email: googleUser.email,
-				name: googleUser.name,
+				email: email,
+				name: userName,
 				updated_at: new Date().toISOString(),
 			})
 			.where("id", "=", user.id)
 			.execute();
 	} else {
 		// Create new user
-		const id = crypto.randomUUID();
+		const id = ID.UserId(crypto.randomUUID());
+		const now = new Date().toISOString();
 		await db
 			.insertInto("users")
 			.values({
 				id,
-				google_id: googleUser.id,
-				email: googleUser.email,
-				name: googleUser.name,
-				created_at: new Date().toISOString(),
-				updated_at: new Date().toISOString(),
+				google_id: googleId,
+				email: email,
+				name: userName,
+				created_at: now,
+				updated_at: now,
 			})
 			.execute();
 		user = {
 			id,
-			google_id: googleUser.id,
-			email: googleUser.email,
-			name: googleUser.name,
-			created_at: "",
-			updated_at: "",
+			google_id: googleId,
+			email: email,
+			name: userName,
+			created_at: now,
+			updated_at: now,
 		};
 	}
 

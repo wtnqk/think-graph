@@ -1,12 +1,6 @@
 import { createMiddleware } from "hono/factory";
 import { verify } from "hono/jwt";
-
-type JwtPayload = {
-	sub: string;
-	email: string;
-	name: string;
-	exp: number;
-};
+import type { JwtPayload } from "../domain/user.js";
 
 type Env = {
 	Bindings: {
@@ -27,8 +21,9 @@ export const authMiddleware = createMiddleware<Env>(async (c, next) => {
 	const token = authHeader.substring(7);
 
 	try {
-		const payload = (await verify(token, c.env.JWT_SECRET)) as JwtPayload;
-		c.set("user", payload);
+		const payload = await verify(token, c.env.JWT_SECRET);
+		// JWTペイロードをJwtPayload型にキャスト（JWTの中身は信頼済み）
+		c.set("user", payload as unknown as JwtPayload);
 		await next();
 	} catch {
 		return c.json({ error: "Invalid token" }, 401);

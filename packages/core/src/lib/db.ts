@@ -1,20 +1,23 @@
 import { Kysely } from "kysely";
 import { D1Dialect } from "kysely-d1";
+import type { NodeType } from "../domain/node.js";
+import type { UserId, GoogleId, NodeId, EdgeId } from "../domain/ids.js";
+import type { Email, UserName } from "../domain/user.js";
 
 export interface UsersTable {
-	id: string;
-	google_id: string;
-	email: string;
-	name: string;
+	id: UserId;
+	google_id: GoogleId;
+	email: Email;
+	name: UserName;
 	created_at: string;
 	updated_at: string;
 }
 
 export interface NodesTable {
-	id: string;
-	type: string;
-	parent_id: string | null;
-	owner_id: string;
+	id: NodeId;
+	type: NodeType;
+	parent_id: NodeId | null;
+	owner_id: UserId;
 	title: string;
 	content: string | null;
 	created_at: string;
@@ -22,15 +25,15 @@ export interface NodesTable {
 }
 
 export interface EdgesTable {
-	id: string;
-	source_id: string;
-	target_id: string;
+	id: EdgeId;
+	source_id: NodeId;
+	target_id: NodeId;
 	created_at: string;
 }
 
 export interface NodeLikesTable {
-	node_id: string;
-	user_id: string;
+	node_id: NodeId;
+	user_id: UserId;
 	created_at: string;
 }
 
@@ -41,7 +44,9 @@ export interface Database {
 	node_likes: NodeLikesTable;
 }
 
-export function createDb(d1: D1Database): Kysely<Database> {
+export type DB = Kysely<Database>;
+
+export function createDb(d1: D1Database): DB {
 	return new Kysely<Database>({
 		dialect: new D1Dialect({ database: d1 }),
 	});
