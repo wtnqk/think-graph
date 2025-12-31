@@ -1,21 +1,28 @@
-import { Auth } from './auth';
+import { type } from "arktype";
+import { Auth } from "./auth";
+import type { ApiEdge, ApiNode } from "./types";
+import { ApiEdgeSchema, ApiNodeSchema } from "./types";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export class ApiClient {
 	private static async request<T>(
 		endpoint: string,
-		options: RequestInit = {}
+		options: RequestInit = {},
+		validator?: (data: unknown) => T,
 	): Promise<T> {
 		const token = Auth.getToken();
 
-		const headers: HeadersInit = {
-			'Content-Type': 'application/json',
-			...options.headers,
+		const headers: Record<string, string> = {
+			"Content-Type": "application/json",
 		};
 
+		if (options.headers) {
+			Object.assign(headers, options.headers);
+		}
+
 		if (token) {
-			headers['Authorization'] = `Bearer ${token}`;
+			headers.Authorization = `Bearer ${token}`;
 		}
 
 		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -25,20 +32,33 @@ export class ApiClient {
 
 		if (response.status === 401) {
 			Auth.removeToken();
-			window.location.href = '/login';
-			throw new Error('Unauthorized');
+			window.location.href = "/login";
+			throw new Error("Unauthorized");
 		}
 
 		if (!response.ok) {
 			throw new Error(`API Error: ${response.status}`);
 		}
 
-		return response.json();
+		const data: unknown = await response.json();
+
+		if (validator) {
+			return validator(data);
+		}
+
+		return data as T;
 	}
 
 	// Nodes API
-	static async getNodes() {
-		return this.request('/api/nodes');
+	static async getNodes(): Promise<ApiNode[]> {
+		const ArrayOfNodes = type([ApiNodeSchema]);
+		return ApiClient.request("/api/nodes", {}, (data) => {
+			const result = ArrayOfNodes(data);
+			if (result instanceof type.errors) {
+				throw new Error(`Invalid nodes response: ${result.summary}`);
+			}
+			return result;
+		});
 	}
 
 	static async createNode(data: {
@@ -46,62 +66,89 @@ export class ApiClient {
 		title: string;
 		content?: string;
 		parent_id?: string;
-	}) {
-		return this.request('/api/nodes', {
-			method: 'POST',
+	}): Promise<ApiNode> {
+		return ApiClient.request(
+			"/api/nodes",
+			{
+				method: "POST",
+				body: JSON.stringify(data),
+			},
+			(data) => {
+				const result = ApiNodeSchema(data);
+				if (result instanceof type.errors) {
+					throw new Error(`Invalid node response: ${result.summary}`);
+				}
+				return result;
+			},
+		);
+	}
+
+	static async updateNode(
+		id: string,
+		data: Partial<{
+			type: string;
+			title: string;
+			content: string;
+			parent_id: string;
+		}>,
+	): Promise<ApiNode> {
+		return ApiClient.request(`/api/nodes/${id}`, {
+			method: "PUT",
 			body: JSON.stringify(data),
 		});
 	}
 
-	static async updateNode(id: string, data: Partial<{
-		type: string;
-		title: string;
-		content: string;
-		parent_id: string;
-	}>) {
-		return this.request(`/api/nodes/${id}`, {
-			method: 'PUT',
-			body: JSON.stringify(data),
-		});
-	}
-
-	static async deleteNode(id: string) {
-		return this.request(`/api/nodes/${id}`, {
-			method: 'DELETE',
+	static async deleteNode(id: string): Promise<void> {
+		return ApiClient.request(`/api/nodes/${id}`, {
+			method: "DELETE",
 		});
 	}
 
 	// Edges API
-	static async getEdges() {
-		return this.request('/api/edges');
-	}
-
-	static async createEdge(data: {
-		source_id: string;
-		target_id: string;
-	}) {
-		return this.request('/api/edges', {
-			method: 'POST',
-			body: JSON.stringify(data),
+	static async getEdges(): Promise<ApiEdge[]> {
+		const ArrayOfEdges = type([ApiEdgeSchema]);
+		return ApiClient.request("/api/edges", {}, (data) => {
+			const result = ArrayOfEdges(data);
+			if (result instanceof type.errors) {
+				throw new Error(`Invalid edges response: ${result.summary}`);
+			}
+			return result;
 		});
 	}
 
-	static async deleteEdge(id: string) {
-		return this.request(`/api/edges/${id}`, {
-			method: 'DELETE',
+	static async createEdge(data: { source_id: string; target_id: string }): Promise<ApiEdge> {
+		return ApiClient.request(
+			"/api/edges",
+			{
+				method: "POST",
+				body: JSON.stringify(data),
+			},
+			(data) => {
+				const result = ApiEdgeSchema(data);
+				if (result instanceof type.errors) {
+					throw new Error(`Invalid edge response: ${result.summary}`);
+				}
+				return result;
+			},
+		);
+	}
+
+	static async deleteEdge(id: string): Promise<void> {
+		return ApiClient.request(`/api/edges/${id}`, {
+			method: "DELETE",
 		});
 	}
 
 	// Likes API
 	static async likeNode(nodeId: string) {
-		return this.request(`/api/nodes/${nodeId}/like`, {
-			method: 'POST',
+		return ApiClient.request(`/api/nodes/${nodeId}/like`, {
+			method: "POST",
 		});
 	}
 
 	static async unlikeNode(nodeId: string) {
-		return this.request(`/api/nodes/${nodeId}/unlike`, {
-			method: 'POST',
+		return ApiClient.request(`/api/nodes/${nodeId}/unlike`, {
+			method: "POST",
 		});
 	}
 }

@@ -112,7 +112,14 @@ auth.get("/google/callback", async (c) => {
 				updated_at: new Date().toISOString(),
 			})
 			.execute();
-		user = { id, google_id: googleUser.id, email: googleUser.email, name: googleUser.name, created_at: "", updated_at: "" };
+		user = {
+			id,
+			google_id: googleUser.id,
+			email: googleUser.email,
+			name: googleUser.name,
+			created_at: "",
+			updated_at: "",
+		};
 	}
 
 	// Create JWT
@@ -123,7 +130,7 @@ auth.get("/google/callback", async (c) => {
 			name: user.name,
 			exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // 7 days
 		},
-		c.env.JWT_SECRET
+		c.env.JWT_SECRET,
 	);
 
 	const redirectTo = getCookie(c, "auth_redirect") || "/";
@@ -131,7 +138,9 @@ auth.get("/google/callback", async (c) => {
 
 	// Return token in URL for client to handle
 	const baseUrl = new URL(c.req.url).origin;
-	return c.redirect(`${baseUrl}/auth/success?token=${token}&redirect=${encodeURIComponent(redirectTo)}`);
+	return c.redirect(
+		`${baseUrl}/auth/success?token=${token}&redirect=${encodeURIComponent(redirectTo)}`,
+	);
 });
 
 auth.post("/logout", (c) => {
