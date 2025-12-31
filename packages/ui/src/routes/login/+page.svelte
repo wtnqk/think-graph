@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Auth } from "$lib/auth";
 	import Icon from "@iconify/svelte";
 	import { onMount } from "svelte";
+	import { Auth } from "$lib/auth";
 
 	onMount(() => {
 		if (Auth.isAuthenticated()) {
@@ -14,7 +14,7 @@
 	}
 </script>
 
-<div class="hero min-h-screen bg-gradient-to-br from-primary to-secondary">
+<div class="hero min-h-screen bg-linear-to-br from-primary to-secondary">
 	<div class="hero-content text-center">
 		<div class="max-w-md">
 			<div class="card bg-base-100 shadow-xl">

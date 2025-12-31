@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-import { renderer } from "./renderer";
-import { auth } from "./routes/auth";
-import { api } from "./routes/api";
-import { nodes } from "./routes/nodes";
-import { edges } from "./routes/edges";
 import { authMiddleware } from "./middleware/auth";
+import { renderer } from "./renderer";
+import { api } from "./routes/api";
+import { auth } from "./routes/auth";
+import { edges } from "./routes/edges";
+import { nodes } from "./routes/nodes";
 
 type Bindings = {
 	DB: D1Database;
