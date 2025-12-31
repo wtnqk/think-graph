@@ -1,28 +1,39 @@
 {
-	"name": "core",
-	"type": "module",
-	"scripts": {
-		"dev": "vite",
-		"build": "vite build",
-		"preview": "$npm_execpath run build && vite preview",
-		"deploy": "$npm_execpath run build && wrangler deploy",
-		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
-		"db:migrate": "atlas migrate diff --env local",
-		"db:apply": "atlas migrate apply --env local",
-		"db:status": "atlas migrate status --env local"
-	},
-	"dependencies": {
-		"arktype": "^2.1.29",
-		"hono": "^4.11.3",
-		"hono-rate-limiter": "^0.5.3",
-		"kysely": "^0.28.9",
-		"kysely-d1": "^0.4.0",
-		"ulid": "^3.0.2"
-	},
-	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.2.3",
-		"vite": "npm:rolldown-vite@^7.3.0",
-		"vite-ssr-components": "^0.5.2",
-		"wrangler": "^4.56.0"
-	}
+  "name": "core",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "$npm_execpath run build && vite preview",
+    "deploy": "$npm_execpath run build && wrangler deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "db:migrate": "atlas migrate diff --env local",
+    "db:apply": "atlas migrate apply --env local",
+    "db:status": "atlas migrate status --env local",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "arktype": "^2.1.29",
+    "hono": "^4.11.3",
+    "hono-rate-limiter": "^0.5.3",
+    "kysely": "^0.28.9",
+    "kysely-d1": "^0.4.0",
+    "ulid": "^3.0.2"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.2.3",
+    "@eslint/js": "^9.39.2",
+    "@hono/eslint-config": "^2.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.51.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.7.4",
+    "vite": "npm:rolldown-vite@^7.3.0",
+    "vite-ssr-components": "^0.5.2",
+    "wrangler": "^4.56.0"
+  }
 }

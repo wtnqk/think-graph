@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { Auth } from '$lib/auth';
-	import { onMount } from 'svelte';
+	import { Auth } from "$lib/auth";
+	import Icon from "@iconify/svelte";
+	import { onMount } from "svelte";
 
 	onMount(() => {
 		if (Auth.isAuthenticated()) {
-			window.location.href = '/';
+			window.location.href = "/";
 		}
 	});
 
@@ -13,57 +14,21 @@
 	}
 </script>
 
-<div class="login-container">
-	<div class="login-card">
-		<h1>Think Graph</h1>
-		<p>Collaborative graph editor for ideas</p>
-		<button on:click={handleLogin} class="login-button">
-			Sign in with Google
-		</button>
+<div class="hero min-h-screen bg-gradient-to-br from-primary to-secondary">
+	<div class="hero-content text-center">
+		<div class="max-w-md">
+			<div class="card bg-base-100 shadow-xl">
+				<div class="card-body">
+					<h1 class="card-title text-4xl justify-center mb-4">Think Graph</h1>
+					<p class="text-base-content/70 mb-6">Collaborative graph editor for ideas</p>
+					<div class="card-actions justify-center">
+						<button onclick={handleLogin} class="btn btn-primary btn-wide">
+							<Icon icon="logos:google" class="w-5 h-5" />
+							Sign in with Google
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
-
-<style>
-	.login-container {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		min-height: 100vh;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-	}
-
-	.login-card {
-		background: white;
-		padding: 3rem;
-		border-radius: 1rem;
-		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-		text-align: center;
-		max-width: 400px;
-	}
-
-	h1 {
-		margin: 0 0 1rem 0;
-		font-size: 2rem;
-		color: #333;
-	}
-
-	p {
-		margin: 0 0 2rem 0;
-		color: #666;
-	}
-
-	.login-button {
-		background: #4285f4;
-		color: white;
-		border: none;
-		padding: 0.75rem 2rem;
-		border-radius: 0.5rem;
-		font-size: 1rem;
-		cursor: pointer;
-		transition: background 0.2s;
-	}
-
-	.login-button:hover {
-		background: #357ae8;
-	}
-</style>

@@ -111,7 +111,7 @@ packages/core/
 - メモリリーク対策として接続リソースを適切にクリーンアップすること
 
 ```typescript
-app.get('/ws', (c) => {
+app.get("/ws", (c) => {
   return c.upgradeWebSocket((ws) => {
     ws.onmessage = async (event) => {
       // メッセージ型検証を実装
