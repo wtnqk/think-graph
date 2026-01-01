@@ -22,12 +22,21 @@ auth.get("/google", (c) => {
 	const redirectTo = c.req.query("redirect") || "/";
 	setCookie(c, "auth_redirect", redirectTo, {
 		httpOnly: true,
-		secure: true,
+		secure: false, // false for localhost development
 		sameSite: "Lax",
 		maxAge: 60 * 10, // 10 minutes
 	});
 
-	const redirectUri = new URL(c.req.url).origin + "/auth/google/callback";
+	// Use the origin from redirect parameter if provided, otherwise use request origin
+	// This allows the callback to go through the Vite proxy in development
+	let callbackOrigin: string;
+	try {
+		callbackOrigin = new URL(redirectTo).origin;
+	} catch {
+		callbackOrigin = new URL(c.req.url).origin;
+	}
+	const redirectUri = callbackOrigin + "/auth/google/callback";
+	console.log("redirectTo:", redirectTo, "callbackOrigin:", callbackOrigin, "redirectUri:", redirectUri);
 	const params = new URLSearchParams({
 		client_id: c.env.GOOGLE_CLIENT_ID,
 		redirect_uri: redirectUri,
@@ -45,7 +54,15 @@ auth.get("/google/callback", async (c) => {
 		return c.text("Missing authorization code", 400);
 	}
 
-	const redirectUri = new URL(c.req.url).origin + "/auth/google/callback";
+	// Get the redirect URL from cookie to determine the correct origin for callback
+	const authRedirect = getCookie(c, "auth_redirect") || "/";
+	let callbackOrigin: string;
+	try {
+		callbackOrigin = new URL(authRedirect).origin;
+	} catch {
+		callbackOrigin = new URL(c.req.url).origin;
+	}
+	const redirectUri = callbackOrigin + "/auth/google/callback";
 
 	// Exchange code for tokens
 	const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
@@ -144,27 +161,38 @@ auth.get("/google/callback", async (c) => {
 	const redirectTo = getCookie(c, "auth_redirect") || "/";
 	deleteCookie(c, "auth_redirect");
 
-	// Return token in URL for client to handle
-	const baseUrl = new URL(c.req.url).origin;
-	return c.redirect(
-		`${baseUrl}/auth/success?token=${token}&redirect=${encodeURIComponent(redirectTo)}`,
-	);
+	// Set JWT as HttpOnly cookie
+	setCookie(c, "auth_token", token, {
+		httpOnly: true,
+		secure: false, // TODO: true in production
+		sameSite: "Lax",
+		path: "/",
+		maxAge: 60 * 60 * 24 * 7, // 7 days
+	});
+
+	return c.redirect(redirectTo);
 });
 
 auth.post("/logout", (c) => {
-	// Client should remove token from storage
+	deleteCookie(c, "auth_token", { path: "/" });
 	return c.json({ ok: true });
 });
 
 // Add endpoint to verify token and get user info
 auth.get("/me", async (c) => {
-	const authHeader = c.req.header("Authorization");
+	// Check cookie first, then Authorization header
+	let token = getCookie(c, "auth_token");
 
-	if (!authHeader || !authHeader.startsWith("Bearer ")) {
-		return c.json({ error: "Unauthorized" }, 401);
+	if (!token) {
+		const authHeader = c.req.header("Authorization");
+		if (authHeader?.startsWith("Bearer ")) {
+			token = authHeader.substring(7);
+		}
 	}
 
-	const token = authHeader.substring(7);
+	if (!token) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 
 	try {
 		const { verify } = await import("hono/jwt");

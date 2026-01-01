@@ -15,11 +15,18 @@
 	import { ApiClient } from "$lib/api";
 	import { Auth } from "$lib/auth";
 	import CustomNode from "$lib/components/CustomNode.svelte";
-	import type { ApiEdge, ApiNode } from "$lib/types";
+	import CreateNodeModal from "$lib/components/CreateNodeModal.svelte";
+	import type { ApiEdge, ApiNode, NodeType } from "$lib/types";
 
 	// Node and Edge stores using Svelte 5 $state
 	let nodes = $state.raw<Node[]>([]);
 	let edges = $state.raw<Edge[]>([]);
+
+	// Current user
+	let currentUserId = $state<string | null>(null);
+
+	// Modal state
+	let isCreateModalOpen = $state(false);
 
 	// Custom node types
 	const nodeTypes = {
@@ -28,10 +35,12 @@
 
 	// Check authentication
 	onMount(async () => {
-		if (!Auth.isAuthenticated()) {
+		const user = await Auth.getCurrentUser();
+		if (!user) {
 			window.location.href = "/login";
 			return;
 		}
+		currentUserId = user.id;
 
 		// Load nodes and edges from API
 		await loadGraph();
@@ -43,6 +52,9 @@
 				ApiClient.getNodes(),
 				ApiClient.getEdges(),
 			]);
+
+			console.log("Loaded nodes:", nodesData);
+			console.log("currentUserId:", currentUserId);
 
 			// Transform API data to SvelteFlow format
 			nodes = (nodesData as ApiNode[]).map(
@@ -56,6 +68,7 @@
 						content: node.content,
 						owner_id: node.owner_id,
 						parent_id: node.parent_id,
+						currentUserId,
 					},
 					parentId: node.parent_id || undefined,
 				}),
@@ -68,6 +81,8 @@
 					target: edge.target_id,
 				}),
 			);
+
+			console.log("Nodes after transform:", nodes);
 		} catch (error) {
 			console.error("Failed to load graph:", error);
 		}
@@ -109,14 +124,22 @@
 		}
 	}
 
-	async function addNode() {
-		const position = { x: 250, y: 250 };
+	function openCreateModal() {
+		isCreateModalOpen = true;
+	}
+
+	function closeCreateModal() {
+		isCreateModalOpen = false;
+	}
+
+	async function handleCreateNode(data: { type: NodeType; title: string; content?: string }) {
+		const position = { x: 250 + Math.random() * 100, y: 250 + Math.random() * 100 };
 
 		try {
 			const node: ApiNode = await ApiClient.createNode({
-				type: "idea",
-				title: "New Idea",
-				content: "",
+				type: data.type,
+				title: data.title,
+				content: data.content,
 			});
 
 			nodes = [
@@ -130,9 +153,12 @@
 						type: node.type,
 						content: node.content,
 						owner_id: node.owner_id,
+						currentUserId,
 					},
 				},
 			];
+
+			closeCreateModal();
 		} catch (error) {
 			console.error("Failed to create node:", error);
 		}
@@ -162,11 +188,17 @@
 				<div class="card-body">
 					<h1 class="card-title text-2xl">Think Graph</h1>
 					<div class="card-actions flex-col">
-						<button onclick={addNode} class="btn btn-primary btn-sm"> Add Node </button>
+						<button onclick={openCreateModal} class="btn btn-primary btn-sm"> Add Node </button>
 						<button onclick={logout} class="btn btn-outline btn-sm"> Logout </button>
 					</div>
 				</div>
 			</div>
 		</Panel>
 	</SvelteFlow>
+
+	<CreateNodeModal
+		open={isCreateModalOpen}
+		onClose={closeCreateModal}
+		onCreate={handleCreateNode}
+	/>
 </div>

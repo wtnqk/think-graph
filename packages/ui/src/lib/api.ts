@@ -3,7 +3,8 @@ import { Auth } from "./auth";
 import type { ApiEdge, ApiNode } from "./types";
 import { ApiEdgeSchema, ApiNodeSchema } from "./types";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+// Use relative URLs in development to go through Vite proxy
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 export class ApiClient {
 	private static async request<T>(
@@ -11,8 +12,6 @@ export class ApiClient {
 		options: RequestInit = {},
 		validator?: (data: unknown) => T,
 	): Promise<T> {
-		const token = Auth.getToken();
-
 		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
 		};
@@ -21,17 +20,14 @@ export class ApiClient {
 			Object.assign(headers, options.headers);
 		}
 
-		if (token) {
-			headers.Authorization = `Bearer ${token}`;
-		}
-
 		const response = await fetch(`${API_BASE_URL}${endpoint}`, {
 			...options,
 			headers,
+			credentials: "include", // Send cookies
 		});
 
 		if (response.status === 401) {
-			Auth.removeToken();
+			Auth.clearCache();
 			window.location.href = "/login";
 			throw new Error("Unauthorized");
 		}
@@ -51,7 +47,7 @@ export class ApiClient {
 
 	// Nodes API
 	static async getNodes(): Promise<ApiNode[]> {
-		const ArrayOfNodes = type([ApiNodeSchema]);
+		const ArrayOfNodes = ApiNodeSchema.array();
 		return ApiClient.request("/api/nodes", {}, (data) => {
 			const result = ArrayOfNodes(data);
 			if (result instanceof type.errors) {
@@ -106,7 +102,7 @@ export class ApiClient {
 
 	// Edges API
 	static async getEdges(): Promise<ApiEdge[]> {
-		const ArrayOfEdges = type([ApiEdgeSchema]);
+		const ArrayOfEdges = ApiEdgeSchema.array();
 		return ApiClient.request("/api/edges", {}, (data) => {
 			const result = ArrayOfEdges(data);
 			if (result instanceof type.errors) {
