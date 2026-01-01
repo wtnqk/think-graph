@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { logger } from "hono/logger";
 import { authMiddleware } from "./middleware/auth";
 import { renderer } from "./renderer";
 import { api } from "./routes/api";
@@ -15,6 +16,7 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
+app.use(logger());
 app.use(renderer);
 
 app.route("/auth", auth);
