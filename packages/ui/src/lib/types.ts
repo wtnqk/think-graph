@@ -30,10 +30,13 @@ export type ApiNode = typeof ApiNodeSchema.infer;
 export type ApiEdge = typeof ApiEdgeSchema.infer;
 export type ApiUser = typeof ApiUserSchema.infer;
 
+// Node type literal
+export type NodeType = "issue" | "idea" | "output" | "comment";
+
 // SvelteFlow node data type (extends Record for SvelteFlow compatibility)
 export interface NodeData extends Record<string, unknown> {
 	label: string;
-	type: "issue" | "idea" | "output" | "comment";
+	type: NodeType;
 	content?: string;
 	owner_id: string;
 	parent_id?: string;

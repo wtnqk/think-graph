@@ -3,8 +3,9 @@
 	import { onMount } from "svelte";
 	import { Auth } from "$lib/auth";
 
-	onMount(() => {
-		if (Auth.isAuthenticated()) {
+	onMount(async () => {
+		const isAuth = await Auth.isAuthenticated();
+		if (isAuth) {
 			window.location.href = "/";
 		}
 	});

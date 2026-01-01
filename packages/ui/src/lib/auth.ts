@@ -1,54 +1,63 @@
+// Use relative URLs in development to go through Vite proxy
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+
 export class Auth {
-	private static TOKEN_KEY = "auth_token";
+	private static cachedUser: { id: string; email: string; name: string } | null = null;
+	private static authChecked = false;
 
-	static getToken(): string | null {
-		if (typeof window === "undefined") return null;
-		return localStorage.getItem(Auth.TOKEN_KEY);
-	}
-
-	static setToken(token: string): void {
-		if (typeof window === "undefined") return;
-		localStorage.setItem(Auth.TOKEN_KEY, token);
-	}
-
-	static removeToken(): void {
-		if (typeof window === "undefined") return;
-		localStorage.removeItem(Auth.TOKEN_KEY);
-	}
-
-	static isAuthenticated(): boolean {
-		return !!Auth.getToken();
+	static async isAuthenticated(): Promise<boolean> {
+		const user = await Auth.getCurrentUser();
+		return user !== null;
 	}
 
 	static async getCurrentUser() {
-		const token = Auth.getToken();
-		if (!token) return null;
+		if (Auth.authChecked && Auth.cachedUser !== null) {
+			return Auth.cachedUser;
+		}
 
 		try {
-			const response = await fetch("http://localhost:3000/auth/me", {
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
+			const response = await fetch(`${API_BASE_URL}/auth/me`, {
+				credentials: "include", // Send cookies
 			});
 
 			if (!response.ok) {
-				Auth.removeToken();
+				Auth.cachedUser = null;
+				Auth.authChecked = true;
 				return null;
 			}
 
-			return await response.json();
+			Auth.cachedUser = await response.json();
+			Auth.authChecked = true;
+			return Auth.cachedUser;
 		} catch (error) {
 			console.error("Failed to get current user:", error);
+			Auth.cachedUser = null;
+			Auth.authChecked = true;
 			return null;
 		}
 	}
 
 	static login() {
-		window.location.href = "http://localhost:3000/auth/google";
+		const redirectTo = encodeURIComponent(window.location.origin + "/");
+		window.location.href = `${API_BASE_URL}/auth/google?redirect=${redirectTo}`;
 	}
 
-	static logout() {
-		Auth.removeToken();
-		window.location.href = "/";
+	static async logout() {
+		try {
+			await fetch(`${API_BASE_URL}/auth/logout`, {
+				method: "POST",
+				credentials: "include",
+			});
+		} catch (error) {
+			console.error("Failed to logout:", error);
+		}
+		Auth.cachedUser = null;
+		Auth.authChecked = false;
+		window.location.href = "/login";
+	}
+
+	static clearCache() {
+		Auth.cachedUser = null;
+		Auth.authChecked = false;
 	}
 }

@@ -1,27 +1,23 @@
 <script lang="ts">
 	import { Handle, Position } from "@xyflow/svelte";
 	import { ApiClient } from "$lib/api";
-	import { Auth } from "$lib/auth";
 
 	import type { NodeData } from "$lib/types";
 
-	export let data: NodeData;
-
-	export let id: string;
-
-	let isEditing = false;
-	let editTitle = data.label;
-	let editContent = data.content || "";
-
-	// Get current user
-	const currentUserId = Auth.getToken() ? parseJwt(Auth.getToken()!).sub : null;
-	const isOwner = currentUserId === data.owner_id;
-
-	function parseJwt(token: string) {
-		const base64Url = token.split(".")[1];
-		const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-		return JSON.parse(atob(base64));
+	interface Props {
+		data: NodeData;
+		id: string;
+		currentUserId?: string | null;
 	}
+
+	let { data, id, currentUserId = null }: Props = $props();
+
+	let isEditing = $state(false);
+	let editTitle = $state(data.label);
+	let editContent = $state(data.content || "");
+
+	// Check if current user is the owner
+	const isOwner = $derived(currentUserId === data.owner_id);
 
 	// Node type colors using DaisyUI classes
 	const typeConfig = {
