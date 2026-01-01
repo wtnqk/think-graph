@@ -53,6 +53,10 @@
 	"dependencies": {
 		"@iconify/svelte": "^5.1.0",
 		"@xyflow/svelte": "^1.5.0",
-		"arktype": "^2.1.29"
+		"arktype": "^2.1.29",
+		"lib0": "^0.2.117",
+		"y-indexeddb": "^9.0.12",
+		"y-protocols": "^1.0.7",
+		"yjs": "^13.6.28"
 	}
 }

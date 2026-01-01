@@ -1,0 +1,1 @@
+export { YjsSyncDO } from "./YjsSyncDO";
