@@ -6,12 +6,17 @@ import { api } from "./routes/api";
 import { auth } from "./routes/auth";
 import { edges } from "./routes/edges";
 import { nodes } from "./routes/nodes";
+import { sync } from "./routes/sync";
+
+// Export Durable Object class for Cloudflare Workers
+export { YjsSyncDO } from "./durable-objects";
 
 type Bindings = {
 	DB: D1Database;
 	GOOGLE_CLIENT_ID: string;
 	GOOGLE_CLIENT_SECRET: string;
 	JWT_SECRET: string;
+	YJS_SYNC: DurableObjectNamespace;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -20,6 +25,7 @@ app.use(logger());
 app.use(renderer);
 
 app.route("/auth", auth);
+app.route("/sync", sync);
 
 const apiRouter = new Hono<{ Bindings: Bindings }>()
 	.use("*", authMiddleware)

@@ -10,6 +10,20 @@
 			"database_id": "local"
 		}
 	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "YJS_SYNC",
+				"class_name": "YjsSyncDO"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_classes": ["YjsSyncDO"]
+		}
+	],
 	// テスト用環境変数
 	"vars": {
 		"JWT_SECRET": "test-jwt-secret-key-for-testing-only"
