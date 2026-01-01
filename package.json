@@ -17,9 +17,6 @@
 		"lint:fix": "turbo lint:fix",
 		"format": "turbo format"
 	},
-	"overrides": {
-		"vite": "npm:rolldown-vite@^7.3.0"
-	},
 	"devDependencies": {
 		"turbo": "^2.7.2"
 	}
