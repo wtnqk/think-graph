@@ -6,7 +6,7 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"lib": ["ESNext"],
-		"types": ["vite/client", "@cloudflare/vitest-pool-workers"],
+		"types": ["vite/client", "@cloudflare/workers-types", "@cloudflare/vitest-pool-workers"],
 		"jsx": "react-jsx",
 		"jsxImportSource": "hono/jsx"
 	}
